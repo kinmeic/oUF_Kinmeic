@@ -1,0 +1,13 @@
+## Interface: 90001
+## Author: kinmeic
+## Title: oUF_Kinmeic
+## Version: 90001.1
+## RequiredDeps: oUF
+## OptionalDeps: oUF_CombatFeedback, oUF_Smooth
+## X-Category: UnitFrame
+
+plugins\oUF_CombatFeedback.lua
+plugins\oUF_Smooth.lua
+
+tags.lua
+layout.lua
