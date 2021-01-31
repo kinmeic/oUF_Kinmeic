@@ -234,7 +234,7 @@ specific.player = function(self)
 			self.Runes[i] = CreateFrame("StatusBar", nil, self)
 			self.Runes[i]:SetStatusBarTexture(statusbar)
 			self.Runes[i]:SetHeight(7)
-			self.Runes[i]:SetWidth((230 - 3) / 4)
+			self.Runes[i]:SetWidth((230 - 3) / 6)
 			self.Runes[i]:SetStatusBarColor(1, 1 - i * 0.33 + 0.33, 0)
 			
 			if i == 1 then
