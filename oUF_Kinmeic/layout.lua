@@ -7,13 +7,17 @@ local backdrop = {
 	insets = {top = -1, left = -1, bottom = -1, right = -1}
 }
 
-oUF.colors.smooth = {0.69, 0.31, 0.31, 0.65, 0.63, 0.35, 0.15, 0.15, 0.15}
+oUF.colors.health:SetCurve(
+	0, CreateColor(0.69, 0.31, 0.31),
+	0.5, CreateColor(0.65, 0.63, 0.35),
+	1, CreateColor(0.15, 0.15, 0.15)
+)
 
 local statusbar = 'Interface\\Addons\\oUF_Kinmeic\\media\\statusbar'
-local highlight = 'Interface\\Addons\\oUF_Kinmeic\\media\\highlightTex'
 local buttonbar = 'Interface\\Addons\\oUF_Kinmeic\\media\\buttonTex'
 local fontNumber = 'Interface\\AddOns\\oUF_Kinmeic\\media\\numberFont.ttf'
 local fontNormal = 'Fonts\\FRIZQT__.ttf'
+local fallbackClassColor = CreateColor(0.84, 0.75, 0.65)
 
 local fontString = function(parent, name, height, style)
 	local fs = parent:CreateFontString(nil, 'OVERLAY')
@@ -40,18 +44,28 @@ local OnMenu = function(self)
 end
 
 local PostUpdateHealth = function(health, unit, min, max)
-	if not UnitIsConnected(unit) or UnitIsDead(unit) or UnitIsGhost(unit) then
+	local connected = UnitIsConnected(unit)
+	local dead = UnitIsDead(unit)
+	local ghost = UnitIsGhost(unit)
+	if (not issecretvalue(connected) and not connected)
+		or (not issecretvalue(dead) and dead)
+		or (not issecretvalue(ghost) and ghost) then
 		local class = select(2, UnitClass(unit))
-		local color = UnitIsPlayer(unit) and oUF.colors.class[class] or {0.84, 0.75, 0.65}
+		local color = fallbackClassColor
+		local isPlayer = UnitIsPlayer(unit)
+		if not issecretvalue(isPlayer) and isPlayer and not issecretvalue(class) then
+			color = oUF.colors.class[class] or fallbackClassColor
+		end
+		local r, g, b = color:GetRGB()
 		
 		health:SetValue(0)
-		health.bg:SetVertexColor(color[1] * 0.5, color[2] * 0.5, color[3] * 0.5)
+		health.bg:SetVertexColor(r * 0.5, g * 0.5, b * 0.5)
 		
-		if not UnitIsConnected(unit) then
+		if not issecretvalue(connected) and not connected then
 			health.value:SetText("|cffD7BEA5".."Offline".."|r")
-		elseif UnitIsDead(unit) then
+		elseif not issecretvalue(dead) and dead then
 			health.value:SetText("|cffD7BEA5".."Dead".."|r")
-		elseif UnitIsGhost(unit) then
+		elseif not issecretvalue(ghost) and ghost then
 			health.value:SetText("|cffD7BEA5".."Ghost".."|r")
 		end
 	else
@@ -60,37 +74,39 @@ local PostUpdateHealth = function(health, unit, min, max)
 end
 
 local PostCreateAura = function(auras, button)
-	button.icon:SetTexCoord(0.1, 0.9, 0.1, 0.9)
-	button.cd:SetReverse()
+	button.Icon:SetTexCoord(0.1, 0.9, 0.1, 0.9)
+	button.Cooldown:SetReverse()
 	
-	button.overlay:SetTexture("Interface\\AddOns\\oUF_Kinmeic\\media\\buttonTex")
+	button.overlay = button:CreateTexture(nil, 'OVERLAY')
+	button.overlay:SetTexture(buttonbar)
 	button.overlay:SetPoint("TOPLEFT", button, "TOPLEFT", -2, 2)
 	button.overlay:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 2, -2)
 	button.overlay:SetTexCoord(0, 1, 0, 1)
+	button.overlay:SetVertexColor(0.84, 0.75, 0.65)
 	
 	button.ButtonOverlay = button:CreateTexture(nil, 'OVERLAY')
 	button.ButtonOverlay:SetPoint('TOPLEFT', -2, 2)
 	button.ButtonOverlay:SetPoint('BOTTOMRIGHT', 2, -2)
-	button.ButtonOverlay:SetTexture('Interface\\AddOns\\oUF_Kinmeic\\media\\buttonTex')
+	button.ButtonOverlay:SetTexture(buttonbar)
 	button.ButtonOverlay:SetVertexColor(.5,.5,.5)
 end
 
-local PostUpdateIcon = function(icons, unit, icon, index, offset)
-	local _, _, _, _, _, duration, expirationTime, unitCaster, _ = UnitAura(unit, index, icon.filter)
-	if unitCaster == "player" or unitCaster == "pet" or unitCaster == "vehicle" then
-		if icon.debuff then
-			icon.overlay:SetVertexColor(0.69, 0.31, 0.31)
-		else
-			icon.overlay:SetVertexColor(0.33, 0.59, 0.33)
-		end
-	else
-		if UnitIsEnemy("player", unit) then
-			if icon.debuff then
-				icon.icon:SetDesaturated(true)
-			end
-		end
-		icon.overlay:SetVertexColor(0.84, 0.75, 0.65)
-	end
+local function CreateAuras(self, filter, anchor, point, relativeTo, relativePoint, x, y, size, maxFrameCount, limit, growthX, growthY)
+	local auras = self:CreateAuras({
+		layout = AnchorUtil.FlowLayoutAxis.Horizontal,
+		initialAnchor = anchor,
+		growthX = growthX,
+		growthY = growthY,
+		layoutLimit = limit,
+	})
+	auras:SetSize(limit, size)
+	auras:SetPoint(point, relativeTo, relativePoint, x, y)
+	auras.size = size
+	auras.elementSpacing = 1
+	auras.lineSpacing = 1
+	auras.PostCreateButton = PostCreateAura
+	auras:AddGroup(filter, {maxFrameCount = maxFrameCount})
+	return auras
 end
 
 specific.player = function(self)
@@ -259,29 +275,9 @@ specific.target = function(self)
 	
 	self.Castbar.Icon:SetPoint("RIGHT", self.Castbar, "LEFT", -3, 0)
 	
-	self.Buffs = CreateFrame("Frame", nil, self)
-	self.Buffs:SetHeight(23)
-	self.Buffs:SetWidth(23 * 6)
-	self.Buffs.size = 23
-	self.Buffs.spacing = 1
-	self.Buffs:SetPoint("TOPLEFT", self, "TOPRIGHT", 3, 0)
-	self.Buffs.initialAnchor = "TOPLEFT"
-	self.Buffs["growth-y"] = "DOWN"
-	self.Buffs.PostCreateIcon = PostCreateAura
-	self.Buffs.PostUpdateIcon = PostUpdateIcon
+	self.Buffs = CreateAuras(self, 'HELPFUL', 'TOPLEFT', 'TOPLEFT', self, 'TOPRIGHT', 3, 0, 23, 6, 23 * 6, 'RIGHT', 'DOWN')
 	
-	self.Debuffs = CreateFrame("Frame", nil, self)
-	self.Debuffs:SetHeight(23 * 0.97)
-	self.Debuffs:SetWidth(230)
-	self.Debuffs.size = 23 * 0.97
-	self.Debuffs.spacing = 1
-	self.Debuffs:SetPoint('TOPLEFT', self.Power, 'BOTTOMLEFT', 0, -3)
-	self.Debuffs.initialAnchor = "TOPLEFT"
-	self.Debuffs["growth-y"] = "DOWN"
-	self.Debuffs.onlyShowPlayer = false
-	self.Debuffs.disableCooldown = false
-	self.Debuffs.PostCreateIcon = PostCreateAura
-	self.Debuffs.PostUpdateIcon = PostUpdateIcon
+	self.Debuffs = CreateAuras(self, 'HARMFUL', 'TOPLEFT', 'TOPLEFT', self.Power, 'BOTTOMLEFT', 0, -3, 23 * 0.97, 10, 230, 'RIGHT', 'DOWN')
 end
 
 specific.pet = function(self)
@@ -298,18 +294,7 @@ specific.pet = function(self)
 	self.Info:SetJustifyH("LEFT")
 	self:Tag(self.Info, '[name]')
 	
-	self.Buffs = CreateFrame("Frame", nil, self)
-	self.Buffs:SetHeight(24)
-	self.Buffs:SetWidth(24 * 6)
-	self.Buffs.size = 24
-	self.Buffs.spacing = 1
-	self.Buffs.num = 8
-	self.Buffs.onlyShowPlayer = true
-	self.Buffs:SetPoint("TOPRIGHT", self, "TOPLEFT", -9, 0)
-	self.Buffs.initialAnchor = "TOPRIGHT"
-	self.Buffs["growth-x"] = "LEFT"
-	self.Buffs.PostCreateIcon = PostCreateAura
-	self.Buffs.PostUpdateIcon = PostUpdateIcon
+	self.Buffs = CreateAuras(self, 'HELPFUL|PLAYER', 'TOPRIGHT', 'TOPRIGHT', self, 'TOPLEFT', -9, 0, 24, 8, 24 * 6, 'LEFT', 'UP')
 end
 
 specific.targettarget = function(self)
@@ -325,18 +310,7 @@ specific.targettarget = function(self)
 	self.Info:SetJustifyH("LEFT")
 	self:Tag(self.Info, '[name]')
 	
-	self.Debuffs = CreateFrame("Frame", nil, self)
-	self.Debuffs:SetHeight(24)
-	self.Debuffs:SetWidth(24 * 6)
-	self.Debuffs.size = 24
-	self.Debuffs.spacing = 1
-	self.Debuffs.num = 8
-	self.Debuffs:SetPoint('TOPLEFT', self, 'TOPRIGHT', 9, 1)
-	self.Debuffs.initialAnchor = "TOPLEFT"
-	self.Debuffs["growth-y"] = "UP"
-	self.Debuffs.onlyShowPlayer = false
-	self.Debuffs.PostCreateIcon = PostCreateAura
-	self.Debuffs.PostUpdateIcon = PostUpdateIcon
+	self.Debuffs = CreateAuras(self, 'HARMFUL', 'TOPLEFT', 'TOPLEFT', self, 'TOPRIGHT', 9, 1, 24, 8, 24 * 6, 'RIGHT', 'UP')
 end
 
 local OnInitialize = function(self, unit)
@@ -363,7 +337,7 @@ local OnInitialize = function(self, unit)
 	self.Health.colorSmooth = true
 --	self.Health.colorClass = true
 --	self.Health.colorReaction = true
-	self.Health.Smooth = true
+	self.Health.smoothing = Enum.StatusBarInterpolation.ExponentialEaseOut
 	
 	self.Health.bg = self.Health:CreateTexture(nil, "BACKGROUND")
 	self.Health.bg:SetAllPoints()
@@ -391,7 +365,7 @@ local OnInitialize = function(self, unit)
 	self.Power.colorTapping = true
 	self.Power.colorPower = true
 	self.Power.colorDisconnected = true
-	self.Power.Smooth = true
+	self.Power.smoothing = Enum.StatusBarInterpolation.ExponentialEaseOut
 
 	self.Power.bg = self.Power:CreateTexture(nil, "BACKGROUND")
 	self.Power.bg:SetAllPoints()
@@ -399,6 +373,7 @@ local OnInitialize = function(self, unit)
 	self.Power.bg:SetAlpha(0.20)
 	
 	self.Power.value = fontString(self.Power, fontNumber, 10, 'THINOUTLINE')
+	self.Power.value.frequentUpdates = 0.1
 	self.Power.value:SetPoint('RIGHT', -1, 1)
 	
 	self.Health.PostUpdate = PostUpdateHealth
@@ -451,15 +426,6 @@ local OnInitialize = function(self, unit)
 		self.Castbar.Time:SetTextColor(0.84, 0.75, 0.65)
 		self.Castbar.Time:SetJustifyH('RIGHT')
 		
-		if unit ~= "focus" then
-			self.Castbar.CustomTimeText = function(_, t)
-				self.Castbar.Time:SetText(("%.2f / %.2f"):format(self.Castbar.castIsChanneled and t or self.Castbar.max - t, self.Castbar.max))
-			end
-			self.Castbar.CustomDelayText = function(_, t)
-				self.Castbar.Time:SetText(("%.2f |cFFFF5033%s%.2f|r"):format(self.Castbar.castIsChanneled and t or self.Castbar.max - t, self.Castbar.castIsChanneled and "-" or "+", self.Castbar.delay))
-			end
-		end
-		
 		self.Castbar.Icon = self.Castbar:CreateTexture(nil, 'ARTWORK')
 		self.Castbar.Icon:SetHeight(42)
 		self.Castbar.Icon:SetWidth(42)
@@ -472,18 +438,10 @@ local OnInitialize = function(self, unit)
 		self.IconOverlay:SetVertexColor(0.25, 0.25, 0.25)
 	end
 	
-	self.RaidIcon = self:CreateTexture(nil, "OVERLAY")
-	self.RaidIcon:SetParent(self.Health)
-	self.RaidIcon:SetSize(16, 16)
-	self.RaidIcon:SetPoint("TOP", 0, 10)
-	
-	self.DebuffHighlight = self.Health:CreateTexture(nil, 'OVERLAY')
-	self.DebuffHighlight:SetAllPoints(self.Health)
-	self.DebuffHighlight:SetTexture('Interface\\Addons\\oUF_Kinmeic\\media\\highlightTex')
-	self.DebuffHighlight:SetVertexColor(0, 0, 0, 0)
-	self.DebuffHighlight:SetBlendMode('ADD')
-	self.DebuffHighlightAlpha = 1
-	self.DebuffHighlightFilter = false
+	self.RaidTargetIndicator = self:CreateTexture(nil, "OVERLAY")
+	self.RaidTargetIndicator:SetParent(self.Health)
+	self.RaidTargetIndicator:SetSize(16, 16)
+	self.RaidTargetIndicator:SetPoint("TOP", 0, 10)
 
 	if specific[unit] then
 		return specific[unit](self)

@@ -1,13 +1,14 @@
-## Interface: 90001
+## Interface: 16001
 ## Author: kinmeic
 ## Title: oUF_Kinmeic
-## Version: 90001.1
+## Version: 16001.1
 ## RequiredDeps: oUF
-## OptionalDeps: oUF_CombatFeedback, oUF_Smooth
+## OptionalDeps: oUF_CombatFeedback
+## AllowLoadGameType: camelot
+## ExcludeLoadGameType: standard, classic
 ## X-Category: UnitFrame
 
 plugins\oUF_CombatFeedback.lua
-plugins\oUF_Smooth.lua
 
 tags.lua
 layout.lua
