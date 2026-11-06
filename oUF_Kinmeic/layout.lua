@@ -284,7 +284,7 @@ specific.pet = function(self)
 	self:SetSize(113, 24)
 
 	self.Health:SetHeight(18)
-	self:Tag(self.Health.value, '[k:perhp]')
+	self:Tag(self.Health.value, '[k:curhp]')
 	
 	self.Power:SetHeight(5)
 	
@@ -300,7 +300,7 @@ end
 specific.targettarget = function(self)
 	self:SetSize(113, 24)
 	self.Health:SetHeight(18)
-	self:Tag(self.Health.value, '[k:perhp]')
+	self:Tag(self.Health.value, '[k:curhp]')
 	
 	self.Power:SetHeight(5)
 	

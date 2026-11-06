@@ -1,9 +1,23 @@
 -- Tags
-oUF.Tags.Methods['k:curhp'] = function(unit)
-	return string.format('|cffffffff%s|r - |cffAF5050%d%%|r',
-		AbbreviateNumbers(UnitHealth(unit)),
-		UnitHealthPercent(unit, true, CurveConstants.ScaleTo100))
+local healthPercentTextCurve = C_CurveUtil.CreateCurve()
+healthPercentTextCurve:SetType(Enum.LuaCurveType.Step)
+healthPercentTextCurve:AddPoint(0, 0)
+healthPercentTextCurve:AddPoint(0.000001, 1)
+for percent = 1, 99 do
+	healthPercentTextCurve:AddPoint(percent / 100, percent)
 end
+healthPercentTextCurve:AddPoint(0.999999999, 99)
+healthPercentTextCurve:AddPoint(1, 0)
+
+local function formattedHealth(unit)
+	local current = AbbreviateNumbers(UnitHealth(unit))
+	local percent = UnitHealthPercent(unit, true, healthPercentTextCurve)
+	local percentText = C_StringUtil.TruncateWhenZero(percent)
+	local suffix = C_StringUtil.WrapString(percentText, ' - ', '%')
+	return string.format('|cffffffff%s|r%s', current, suffix)
+end
+
+oUF.Tags.Methods['k:curhp'] = formattedHealth
 
 oUF.Tags.Methods['k:curpp'] = function(unit)
 	return string.format('|cffffffff%s|r - |cffAF5050%d%%|r',
