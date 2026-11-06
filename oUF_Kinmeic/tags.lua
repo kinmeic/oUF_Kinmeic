@@ -6,7 +6,7 @@ healthPercentTextCurve:AddPoint(0.000001, 1)
 for percent = 1, 99 do
 	healthPercentTextCurve:AddPoint(percent / 100, percent)
 end
-healthPercentTextCurve:AddPoint(0.999999999, 99)
+healthPercentTextCurve:AddPoint(0.995, 0)
 healthPercentTextCurve:AddPoint(1, 0)
 
 local function formattedHealth(unit)
