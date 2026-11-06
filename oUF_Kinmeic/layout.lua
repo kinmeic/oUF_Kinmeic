@@ -335,7 +335,7 @@ local OnInitialize = function(self, unit)
 	self.Health.colorTapping = true
 	self.Health.colorDisconnected = true
 	self.Health.colorSmooth = true
---	self.Health.colorClass = true
+	self.Health.colorClass = true
 --	self.Health.colorReaction = true
 	self.Health.smoothing = Enum.StatusBarInterpolation.ExponentialEaseOut
 	
