@@ -1,7 +1,13 @@
 # oUF_Kinmeic
 An unit frame plugin for world of warcraft
 
-Need oUF framework, you can get it from http://www.wowinterface.com
+Includes oUF 14.2.1 with local Forever compatibility adjustments. Upstream: https://github.com/oUF-wow/oUF
+
+## Installation
+
+Copy both `oUF/` and `oUF_Kinmeic/` into `World of Warcraft/_forever_/Interface/AddOns/`, then reload the UI. Keep the two folders alongside each other.
+
+The framework retains its upstream license in `oUF/LICENSE.txt`. Local compatibility changes are documented in `oUF/FOREVER_COMPATIBILITY.md`.
 
 ## Compatibility
 
