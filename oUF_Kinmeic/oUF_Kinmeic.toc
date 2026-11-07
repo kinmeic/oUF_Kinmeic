@@ -7,8 +7,10 @@
 ## AllowLoadGameType: camelot
 ## ExcludeLoadGameType: standard, classic
 ## X-Category: UnitFrame
+## SavedVariables: oUF_KinmeicDB
 
 plugins\oUF_CombatFeedback.lua
 
 tags.lua
 layout.lua
+options.lua

@@ -124,7 +124,7 @@ specific.player = function(self)
 		self:Tag(self.Power.value, '[k:curpp]')
 	end
 	
-	self:Tag(self.Info.value, '[raidcolor][name]|r [level] [smartclass]')
+	self:Tag(self.Info.value, '[raidcolor][k:playername]|r [level] [smartclass]')
 	
 --	self.Castbar:SetPoint("LEFT", self, "RIGHT", 3, 0)
 --	self.Castbar:SetPoint("BOTTOMRIGHT", self, "TOPRIGHT", 0, 13)

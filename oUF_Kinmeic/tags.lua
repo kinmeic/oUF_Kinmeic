@@ -33,3 +33,13 @@ end
 oUF.Tags.Events['k:curhp']   = 'UNIT_MAXHEALTH UNIT_HEALTH'
 oUF.Tags.Events['k:perhp']   = 'UNIT_MAXHEALTH UNIT_HEALTH'
 oUF.Tags.Events['k:curpp']   = 'UNIT_MAXPOWER UNIT_POWER_UPDATE'
+
+oUF.Tags.Methods['k:playername'] = function(unit, realUnit)
+	if unit == 'player' and oUF_KinmeicDB and oUF_KinmeicDB.hidePlayerName then
+		return ''
+	end
+
+	return _TAGS['name'](unit, realUnit)
+end
+
+oUF.Tags.Events['k:playername'] = 'UNIT_NAME_UPDATE'
